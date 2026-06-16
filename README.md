@@ -98,7 +98,5 @@ Output:
 - `NoSnacksError` — missing treat
 
 ## 👤 Author
-
-**FelineFantasy**
-
-License: MIT
+- **FelineFantasy**
+- **License**: MIT
