@@ -1,6 +1,8 @@
 import os
 import sys
 import shutil
+import platform
+import subprocess
 
 
 def translate_purr(code):
@@ -51,38 +53,72 @@ def translate_purr(code):
     return code
 
 
+def get_install_dir():
+    system = platform.system()
+    if system == "Windows":
+        return os.path.join(os.environ.get("LOCALAPPDATA", os.path.expanduser("~")), "PurrScript")
+    else:
+        return os.path.join(os.path.expanduser("~"), ".local", "share", "purrscript")
+
+
+def get_executable_name():
+    system = platform.system()
+    if system == "Windows":
+        return "purr.exe"
+    else:
+        return "purr"
+
+
 def is_installed():
-    install_dir = "C:\\PurrScript"
-    return os.path.exists(install_dir + "\\purr.exe")
+    install_dir = get_install_dir()
+    exe_name = get_executable_name()
+    return os.path.exists(os.path.join(install_dir, exe_name))
 
 
 def install():
     print("Установка PurrScript...")
-    install_dir = "C:\\PurrScript"
+    install_dir = get_install_dir()
 
     if not os.path.exists(install_dir):
         os.makedirs(install_dir)
 
-    target = install_dir + "\\purr.exe"
+    exe_name = get_executable_name()
+    target = os.path.join(install_dir, exe_name)
+
     if os.path.abspath(sys.argv[0]) != os.path.abspath(target):
         shutil.copy(sys.argv[0], target)
-        print("Скопирован purr.exe")
+        print(f"Скопирован {exe_name}")
+
+        system = platform.system()
+        if system != "Windows":
+            os.chmod(target, 0o755)
     else:
         print("PurrScript уже установлен!")
 
-    bat = f'''@echo off
-"{install_dir}\\purr.exe" %*
+    if platform.system() == "Windows":
+        bat = f'''@echo off
+"{install_dir}\\{exe_name}" %*
 '''
-    bat_path = install_dir + "\\purr.bat"
-    if not os.path.exists(bat_path):
-        with open(bat_path, "w") as f:
-            f.write(bat)
-        print("Создан purr.bat")
+        bat_path = os.path.join(install_dir, "purr.bat")
+        if not os.path.exists(bat_path):
+            with open(bat_path, "w") as f:
+                f.write(bat)
+            print("Создан purr.bat")
 
     choice = input("Добавить в PATH? (y/n): ")
-    if choice == 'y':
-        os.system(f'setx PATH "%PATH%;{install_dir}"')
-        print("PATH обновлён!")
+    if choice.lower() == 'y':
+        system = platform.system()
+        if system == "Windows":
+            os.system(f'setx PATH "%PATH%;{install_dir}"')
+            print("PATH обновлён!")
+        else:
+            shell_rc = os.path.expanduser("~/.bashrc")
+            if os.path.exists(os.path.expanduser("~/.zshrc")):
+                shell_rc = os.path.expanduser("~/.zshrc")
+
+            with open(shell_rc, "a") as f:
+                f.write(f'\nexport PATH="$PATH:{install_dir}"\n')
+            print(f"PATH добавлен в {shell_rc}")
 
     print("\nУстановка завершена!")
     print("Перезапусти терминал")
