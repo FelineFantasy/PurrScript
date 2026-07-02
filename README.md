@@ -106,5 +106,5 @@ purr hello.purr
 
 ## 👤 Author
 
-* **FelineFantasy** — [GitHub Profile](https://github.com/FelineFantasy)
-* License: **MIT**
+- **FelineFantasy**
+- **License**: MIT
