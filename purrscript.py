@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 
+"""
+PurrScript - cat-themed Python interpreter for .purr files
+"""
+
 import os
 import sys
 import shutil
