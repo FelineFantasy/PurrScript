@@ -14,7 +14,7 @@ PurrScript is a transpiler that translates cat commands into Python. No more bor
 ### Quick Install
 
 ```bash
-git clone https://github.com/FelineFantasy/PurrScript.git
+git clone https://github.com/FelineFantasy/PurrScript
 cd PurrScript
 python purrscript.py install
 ```
