@@ -8,6 +8,14 @@ import os
 import sys
 import shutil
 import platform
+import re
+
+_ORDERED = sorted(REPLACEMENTS.items(), key=lambda kv: -len(kv[0]))
+
+def translate_purr(code):
+    for old, new in _ORDERED:
+        code = re.sub(rf'\b{re.escape(old)}\b', new, code)
+    return code
 
 
 REPLACEMENTS = {
