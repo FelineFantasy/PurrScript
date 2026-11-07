@@ -4,19 +4,14 @@
 PurrScript - cat-themed Python interpreter for .purr files
 """
 
+import argparse
 import os
 import sys
 import shutil
 import platform
 import re
 
-_ORDERED = sorted(REPLACEMENTS.items(), key=lambda kv: -len(kv[0]))
-
-def translate_purr(code):
-    for old, new in _ORDERED:
-        code = re.sub(rf'\b{re.escape(old)}\b', new, code)
-    return code
-
+VERSION = "1.0.0"
 
 REPLACEMENTS = {
     "MR": "# program started",
@@ -24,6 +19,8 @@ REPLACEMENTS = {
     "treat": "True",
     "meow": "print",
     "beg": "input",
+    "sniff_file": "read",
+    "hiss_error": "try",
     "sniff": "if",
     "peer": "elif",
     "other_paw": "else",
@@ -52,18 +49,21 @@ REPLACEMENTS = {
     "void_box": "None",
     "claw": "open",
     "scratch": "write",
-    "sniff_file": "read",
     "close_door": "close",
-    "hiss_error": "try",
     "catch_mouse": "except",
     "finally_nap": "finally",
     "YES": "True",
     "NO": "False",
 }
 
+# Порядок важен: длинные ключи заменяются раньше коротких,
+# чтобы "sniff_file" не превратился в "iffile".
+_ORDERED = sorted(REPLACEMENTS.items(), key=lambda kv: -len(kv[0]))
+
+
 def translate_purr(code):
-    for old, new in REPLACEMENTS.items():
-        code = code.replace(old, new)
+    for old, new in _ORDERED:
+        code = re.sub(rf'\b{re.escape(old)}\b', new, code)
     return code
 
 
@@ -147,12 +147,7 @@ def show_help():
     input("\nНажми Enter для выхода...")
 
 
-def run_interpreter():
-    if len(sys.argv) < 2:
-        show_help()
-        sys.exit(1)
-
-    filename = sys.argv[1]
+def run_interpreter(filename):
     try:
         with open(filename, "r", encoding="utf-8") as f:
             content = f.read()
@@ -186,12 +181,38 @@ def run_interpreter():
     input("\nНажми Enter для выхода...")
 
 
-if __name__ == "__main__":
-    if len(sys.argv) > 1 and sys.argv[1].endswith('.purr'):
-        run_interpreter()
-    elif len(sys.argv) > 1:
+def main(argv=None):
+    parser = argparse.ArgumentParser(
+        prog="purr",
+        description="PurrScript — cat-themed Python interpreter for .purr files",
+    )
+    parser.add_argument("file", nargs="?", help="путь к .purr файлу")
+    parser.add_argument(
+        "--install", action="store_true",
+        help="установить PurrScript (копирование в каталог установки + PATH)",
+    )
+    parser.add_argument(
+        "--version", action="version", version=f"PurrScript {VERSION}",
+    )
+    args = parser.parse_args(argv)
+
+    if args.install:
         install()
-    elif is_installed():
+        return
+
+    if args.file:
+        if not args.file.endswith(".purr"):
+            sys.stderr.write(f"Не .purr файл: {args.file}\n")
+            sys.exit(2)
+        run_interpreter(args.file)
+        return
+
+    # Без аргументов — показать справку (или предложить установку).
+    if is_installed():
         show_help()
     else:
         install()
+
+
+if __name__ == "__main__":
+    main()
