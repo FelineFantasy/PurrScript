@@ -67,6 +67,33 @@ def translate_purr(code):
     return code
 
 
+# --- Non-interactive safe I/O -------------------------------------------
+
+def pause(message="\nНажми Enter для выхода..."):
+    """Ждём Enter только если stdin — терминал.
+
+    В cron/CI/пайпе input() упал бы с EOFError или завис.
+    """
+    if not sys.stdin.isatty():
+        return
+    try:
+        input(message)
+    except (EOFError, KeyboardInterrupt):
+        pass
+
+
+def ask(question, default="n"):
+    """Задать вопрос только в интерактивном режиме, иначе вернуть default."""
+    if not sys.stdin.isatty():
+        return default
+    try:
+        return input(question)
+    except (EOFError, KeyboardInterrupt):
+        return default
+
+
+# --- Install ------------------------------------------------------------
+
 def get_install_dir():
     system = platform.system()
     if system == "Windows":
@@ -119,8 +146,7 @@ def install():
                 f.write(bat)
             print("Создан purr.bat")
 
-    choice = input("Добавить в PATH? (y/n): ")
-    if choice.lower() == 'y':
+    if ask("Добавить в PATH? (y/n): ").lower() == 'y':
         system = platform.system()
         if system == "Windows":
             os.system(f'setx PATH "%PATH%;{install_dir}"')
@@ -137,14 +163,16 @@ def install():
     print("\nУстановка завершена!")
     print("Перезапусти терминал")
     print("Теперь можно: purr hello.purr")
-    input("\nНажми Enter для выхода...")
+    pause()
 
+
+# --- Help / interpreter -------------------------------------------------
 
 def show_help():
     print("PurrScript Interpreter")
     print("Использование: purr файл.purr")
     print("Пример: purr hello.purr")
-    input("\nНажми Enter для выхода...")
+    pause()
 
 
 def run_interpreter(filename):
@@ -153,20 +181,20 @@ def run_interpreter(filename):
             content = f.read()
     except FileNotFoundError:
         sys.stderr.write(f"Файл не найден: {filename}\n")
-        input("\nНажми Enter для выхода...")
+        pause()
         sys.exit(1)
 
     if "MR" not in content:
         sys.stderr.write("EntryThresholdNotFound\n")
-        input("\nНажми Enter для выхода...")
+        pause()
         sys.exit(1)
     if "PR" not in content:
         sys.stderr.write("ExitDoorAjar\n")
-        input("\nНажми Enter для выхода...")
+        pause()
         sys.exit(1)
     if "treat" not in content:
         sys.stderr.write("NoSnacksError\n")
-        input("\nНажми Enter для выхода...")
+        pause()
         sys.exit(1)
 
     python_code = translate_purr(content)
@@ -175,11 +203,13 @@ def run_interpreter(filename):
         exec(compile(python_code, filename, "exec"), g)
     except Exception as e:
         sys.stderr.write(f"{e}\n")
-        input("\nНажми Enter для выхода...")
+        pause()
         sys.exit(1)
 
-    input("\nНажми Enter для выхода...")
+    pause()
 
+
+# --- CLI ----------------------------------------------------------------
 
 def main(argv=None):
     parser = argparse.ArgumentParser(
