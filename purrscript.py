@@ -176,7 +176,8 @@ def run_interpreter():
 
     python_code = translate_purr(content)
     try:
-        exec(python_code)
+        g = {"__name__": "__main__", "__file__": filename}
+        exec(compile(python_code, filename, "exec"), g)
     except Exception as e:
         sys.stderr.write(f"{e}\n")
         input("\nНажми Enter для выхода...")
