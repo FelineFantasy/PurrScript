@@ -56,8 +56,6 @@ REPLACEMENTS = {
     "NO": "False",
 }
 
-# Порядок важен: длинные ключи заменяются раньше коротких,
-# чтобы "sniff_file" не превратился в "iffile".
 _ORDERED = sorted(REPLACEMENTS.items(), key=lambda kv: -len(kv[0]))
 
 
@@ -67,13 +65,7 @@ def translate_purr(code):
     return code
 
 
-# --- Non-interactive safe I/O -------------------------------------------
-
 def pause(message="\nНажми Enter для выхода..."):
-    """Ждём Enter только если stdin — терминал.
-
-    В cron/CI/пайпе input() упал бы с EOFError или завис.
-    """
     if not sys.stdin.isatty():
         return
     try:
@@ -83,7 +75,6 @@ def pause(message="\nНажми Enter для выхода..."):
 
 
 def ask(question, default="n"):
-    """Задать вопрос только в интерактивном режиме, иначе вернуть default."""
     if not sys.stdin.isatty():
         return default
     try:
@@ -91,8 +82,6 @@ def ask(question, default="n"):
     except (EOFError, KeyboardInterrupt):
         return default
 
-
-# --- Install ------------------------------------------------------------
 
 def get_install_dir():
     system = platform.system()
@@ -166,8 +155,6 @@ def install():
     pause()
 
 
-# --- Help / interpreter -------------------------------------------------
-
 def show_help():
     print("PurrScript Interpreter")
     print("Использование: purr файл.purr")
@@ -209,8 +196,6 @@ def run_interpreter(filename):
     pause()
 
 
-# --- CLI ----------------------------------------------------------------
-
 def main(argv=None):
     parser = argparse.ArgumentParser(
         prog="purr",
@@ -237,7 +222,6 @@ def main(argv=None):
         run_interpreter(args.file)
         return
 
-    # Без аргументов — показать справку (или предложить установку).
     if is_installed():
         show_help()
     else:
